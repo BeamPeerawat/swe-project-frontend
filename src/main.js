@@ -12,22 +12,29 @@ axios.defaults.baseURL = baseURL;
 axios.defaults.withCredentials = true;
 
 // Log request details
-axios.interceptors.request.use(config => {
-  console.log('Request:', config.url, 'withCredentials:', config.withCredentials, 'Headers:', config.headers);
-  return config;
-}, error => {
-  console.error('Request error:', error);
-  return Promise.reject(error);
-});
+axios.interceptors.request.use(
+  (config) => {
+    console.log('Request:', config.url, 'withCredentials:', config.withCredentials);
+    console.log('Request Headers:', config.headers);
+    return config;
+  },
+  (error) => {
+    console.error('Request error:', error);
+    return Promise.reject(error);
+  }
+);
 
 // Log response details
-axios.interceptors.response.use(response => {
-  console.log('Response:', response.config.url, 'Status:', response.status);
-  return response;
-}, error => {
-  console.error('Response error:', error.response?.status, error.response?.data);
-  return Promise.reject(error);
-});
+axios.interceptors.response.use(
+  (response) => {
+    console.log('Response:', response.config.url, 'Status:', response.status);
+    return response;
+  },
+  (error) => {
+    console.error('Response error:', error.response?.status, error.response?.data);
+    return Promise.reject(error);
+  }
+);
 
 const app = createApp(App);
 app.use(router);
