@@ -462,13 +462,16 @@ export default {
     },
     async downloadPDF(requestId, requestType) {
       const endpoint = requestType === 'open_course'
-        ? `/api/opencourserequests/${requestId}/pdf`
+        ? `/api/opencourserequests/${requestId}/pdf?userId=${this.user._id}`
         : requestType === 'add_seat'
-        ? `/api/addseatrequests/${requestId}/pdf`
-        : `/api/generalrequests/${requestId}/pdf`;
+        ? `/api/addseatrequests/${requestId}/pdf?userId=${this.user._id}`
+        : `/api/generalrequests/${requestId}/pdf?userId=${this.user._id}`;
       try {
         console.log(`Downloading PDF from: ${endpoint}`);
-        const response = await axios.get(endpoint, { responseType: 'blob' });
+        const response = await axios.get(endpoint, { 
+          responseType: 'blob',
+          withCredentials: true
+        });
         const fileName = requestType === 'open_course' 
           ? `RE07_${requestId}.pdf` 
           : requestType === 'add_seat' 
@@ -486,7 +489,9 @@ export default {
         console.error('Error downloading PDF:', {
           endpoint,
           status: error.response?.status,
-          message: error.response?.data?.message || error.message
+          message: error.response?.data?.message || error.message,
+          userId: this.user._id,
+          requestType
         });
         this.showNotification = true;
         this.notificationMessage = error.response?.data?.message || 'เกิดข้อผิดพลาดในการดาวน์โหลด PDF';
