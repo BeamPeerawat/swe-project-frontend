@@ -241,7 +241,7 @@ export default {
         request_change_course: 'ขอเปลี่ยนแปลงรายวิชา',
         other: 'อื่นๆ',
         open_course: 'ขอเปิดรายวิชานอกแผนการเรียน',
-        add_seat: 'ขอเพิ่มที่นั่ง' // เพิ่มสำหรับ AddSeatRequest
+        add_seat: 'ขอเพิ่มที่นั่ง'
       }
     };
   },
@@ -265,16 +265,45 @@ export default {
   watch: {
     currentPage() {
       this.updatePaginatedRequests();
+    },
+    searchQuery() {
+      this.filterRequests();
+    },
+    statusFilter() {
+      this.filterRequests();
     }
   },
   methods: {
     async fetchRequests() {
       this.isLoading = true;
+      this.errorMessage = '';
       try {
+        console.log('Fetching requests for user:', this.user._id);
         const [generalResponse, openCourseResponse, addSeatResponse] = await Promise.all([
-          axios.get(`/api/generalrequests?userId=${this.user._id}`),
-          axios.get(`/api/opencourserequests/opencourserequests?userId=${this.user._id}`),
-          axios.get(`/api/addseatrequests/user/${this.user._id}`), // Updated endpoint
+          axios.get(`/api/generalrequests?userId=${this.user._id}`).catch(err => {
+            console.error('General Requests error:', {
+              status: err.response?.status,
+              message: err.response?.data?.message || err.message
+            });
+            this.errorMessage += `General Requests: ${err.response?.data?.message || 'เกิดข้อผิดพลาด'} | `;
+            return { data: [] };
+          }),
+          axios.get(`/api/opencourserequests/opencourserequests?userId=${this.user._id}`).catch(err => {
+            console.error('Open Course Requests error:', {
+              status: err.response?.status,
+              message: err.response?.data?.message || err.message
+            });
+            this.errorMessage += `Open Course Requests: ${err.response?.data?.message || 'เกิดข้อผิดพลาด'} | `;
+            return { data: [] };
+          }),
+          axios.get(`/api/addseatrequests/user/${this.user._id}`).catch(err => {
+            console.error('Add Seat Requests error:', {
+              status: err.response?.status,
+              message: err.response?.data?.message || err.message
+            });
+            this.errorMessage += `Add Seat Requests: ${err.response?.data?.message || 'เกิดข้อผิดพลาด'} | `;
+            return { data: [] };
+          })
         ]);
 
         this.requests = [
@@ -284,12 +313,18 @@ export default {
             .map(req => ({ ...req, requestType: 'open_course', petitionType: 'open_course' })),
           ...addSeatResponse.data
             .filter(req => req.status !== 'draft')
-            .map(req => ({ ...req, requestType: 'add_seat', petitionType: 'add_seat' })),
+            .map(req => ({ ...req, requestType: 'add_seat', petitionType: 'add_seat' }))
         ];
+
+        console.log('General Requests:', generalResponse.data);
+        console.log('Open Course Requests:', openCourseResponse.data);
+        console.log('Add Seat Requests:', addSeatResponse.data);
+        console.log('Combined Requests:', this.requests);
+
         this.filterRequests();
       } catch (error) {
-        console.error('Error fetching requests:', error);
-        this.errorMessage = error.response?.data?.message || 'เกิดข้อผิดพลาดในการโหลดข้อมูลคำร้อง';
+        console.error('Unexpected error in fetchRequests:', error);
+        this.errorMessage = this.errorMessage || 'เกิดข้อผิดพลาดในการโหลดข้อมูลคำร้อง';
       } finally {
         this.isLoading = false;
       }
@@ -399,6 +434,7 @@ export default {
         this.closeConfirmModal();
         await this.fetchRequests();
       } catch (error) {
+        console.error('Error canceling request:', error.response?.status, error.response?.data);
         this.showNotification = true;
         this.notificationMessage = error.response?.data?.message || 'เกิดข้อผิดพลาดในการยกเลิกคำร้อง';
         this.notificationType = 'error';
@@ -431,7 +467,7 @@ export default {
         console.error('Error downloading PDF:', {
           endpoint,
           status: error.response?.status,
-          message: error.response?.data?.message || error.message,
+          message: error.response?.data?.message || error.message
         });
         this.showNotification = true;
         this.notificationMessage = error.response?.data?.message || 'เกิดข้อผิดพลาดในการดาวน์โหลด PDF';
