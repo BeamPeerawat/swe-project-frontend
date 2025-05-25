@@ -1,28 +1,31 @@
-import axios from 'axios';
+import api from './api';
 
-const api = axios.create({
-  baseURL: 'https://swe-project-backend-g841.onrender.com/api',
-  withCredentials: true,
-});
-
-// ดึงข้อมูลผู้ใช้ที่ล็อกอิน
 export const getCurrentUser = async () => {
   try {
     const response = await api.get('/auth/user');
-    return response.data.user;
+    const user = response.data.user;
+    // บันทึก user ลง localStorage
+    localStorage.setItem('user', JSON.stringify(user));
+    return user;
   } catch (error) {
     console.error('Error fetching user:', error);
+    // Fallback: ดึงจาก localStorage
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      // ตรวจสอบว่าเป็น admin
+      if (user.role === 'admin') {
+        return user;
+      }
+    }
     return null;
   }
 };
 
-// ตรวจสอบว่าเป็น admin หรือไม่
-export const isAdmin = (user) => user && user.role === 'admin';
-
-// ออกจากระบบ
 export const logout = async () => {
   try {
-    await api.get('/auth/logout');
+    await api.post('/auth/logout');
+    localStorage.removeItem('user');
     return true;
   } catch (error) {
     console.error('Error logging out:', error);
