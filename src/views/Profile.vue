@@ -238,8 +238,6 @@
 </template>
 
 <script>
-import axios from 'axios';
-
 export default {
   name: 'ProfilePage',
   data() {
@@ -292,53 +290,55 @@ export default {
     async fetchUserData() {
       this.isLoadingUser = true;
       this.errorMessageUser = '';
+      const userData = JSON.parse(localStorage.getItem('user'));
+      if (!userData || !userData._id) {
+        this.errorMessageUser = 'ไม่พบข้อมูลผู้ใช้ กรุณาล็อกอินใหม่';
+        this.isLoadingUser = false;
+        return;
+      }
       try {
-        const response = await this.$axios.get('/api/auth/user');
+        const response = await this.$axios.get(`/api/auth/user?userId=${userData._id}`, {
+          withCredentials: true,
+        });
         this.user = response.data.user;
         localStorage.setItem('user', JSON.stringify(this.user));
       } catch (error) {
-        console.error('Error fetching user data:', error);
-        this.errorMessageUser = 'เกิดข้อผิดพลาดในการโหลดข้อมูลผู้ใช้ กรุณาล็อกอินใหม่';
-        if (error.response?.status === 401) {
-          setTimeout(() => {
-            localStorage.removeItem('user');
-            this.$router.push('/login');
-          }, 2000);
-        }
+        console.error('Error fetching user data:', error.response?.data || error.message);
+        this.errorMessageUser = 'เกิดข้อผิดพลาดในการโหลดข้อมูลผู้ใช้: ' + (error.response?.data?.message || error.message);
       } finally {
         this.isLoadingUser = false;
       }
     },
     async fetchRequestHistory() {
-  this.isLoading = true;
-  this.errorMessage = '';
-  try {
-    const userData = JSON.parse(localStorage.getItem('user'));
-    if (!userData || !userData._id) {
-      throw new Error('ไม่พบข้อมูลผู้ใช้หรือข้อมูลไม่ครบถ้วน');
-    }
-
-    const [generalResponse, openCourseResponse, addSeatResponse] = await Promise.all([
-      axios.get(`/api/generalrequests?userId=${userData._id}`),
-      axios.get(`/api/opencourserequests/opencourserequests?userId=${userData._id}`),
-      axios.get(`/api/addseatrequests/user/${userData._id}`), // Updated endpoint
-    ]);
-
-    this.requestHistory = [
-      ...generalResponse.data.map(req => ({ ...req, requestType: 'general' })),
-      ...openCourseResponse.data
-        .filter(req => req.status !== 'draft')
-        .map(req => ({ ...req, requestType: 'open_course', petitionType: 'open_course' })),
-      ...addSeatResponse.data
-        .filter(req => req.status !== 'draft')
-        .map(req => ({ ...req, requestType: 'add_seat', petitionType: 'add_seat' })),
-    ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  } catch (error) {
-    console.error('Error fetching request history:', error);
-    this.errorMessage = 'เกิดข้อผิดพลาดในการโหลดประวัติคำร้อง กรุณาลองใหม่';
-  } finally {
-    this.isLoading = false;
-  }
+      this.isLoading = true;
+      this.errorMessage = '';
+      try {
+        const userData = JSON.parse(localStorage.getItem('user'));
+        if (!userData || !userData._id) {
+          throw new Error('ไม่พบข้อมูลผู้ใช้หรือข้อมูลไม่ครบถ้วน');
+        }
+        const [generalResponse, openCourseResponse, addSeatResponse] = await Promise.all([
+          this.$axios.get(`/api/generalrequests?userId=${userData._id}`, { withCredentials: true }),
+          this.$axios.get(`/api/opencourserequests/opencourserequests?userId=${userData._id}`, {
+            withCredentials: true,
+          }),
+          this.$axios.get(`/api/addseatrequests/user/${userData._id}`, { withCredentials: true }),
+        ]);
+        this.requestHistory = [
+          ...generalResponse.data.map((req) => ({ ...req, requestType: 'general' })),
+          ...openCourseResponse.data
+            .filter((req) => req.status !== 'draft')
+            .map((req) => ({ ...req, requestType: 'open_course', petitionType: 'open_course' })),
+          ...addSeatResponse.data
+            .filter((req) => req.status !== 'draft')
+            .map((req) => ({ ...req, requestType: 'add_seat', petitionType: 'add_seat' })),
+        ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      } catch (error) {
+        console.error('Error fetching request history:', error.response?.data || error.message);
+        this.errorMessage = 'เกิดข้อผิดพลาดในการโหลดประวัติคำร้อง: ' + (error.response?.data?.message || error.message);
+      } finally {
+        this.isLoading = false;
+      }
     },
     getPetitionTypeLabel(request) {
       if (request.requestType === 'open_course') {
@@ -422,6 +422,7 @@ export default {
       }
       try {
         const updateData = {
+          userId: this.user._id,
           name: this.editUser.name,
           student_no: this.editUser.student_no,
           faculty: this.editUser.faculty,
@@ -429,7 +430,9 @@ export default {
           group: this.editUser.group,
           contactNumber: this.editUser.contactNumber || '',
         };
-        const response = await this.$axios.put(`/api/user/${this.user.email}`, updateData);
+        const response = await this.$axios.put(`/api/user/${this.user.email}`, updateData, {
+          withCredentials: true,
+        });
         this.user = response.data;
         localStorage.setItem('user', JSON.stringify(this.user));
         this.isEditing = false;
@@ -441,7 +444,7 @@ export default {
           this.closeNotification();
         }, 5000);
       } catch (error) {
-        console.error('Error saving profile:', error);
+        console.error('Error saving profile:', error.response?.data || error.message);
         this.showNotification = true;
         this.notificationMessage = error.response?.data?.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่';
         this.notificationType = 'error';
