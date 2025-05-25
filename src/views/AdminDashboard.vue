@@ -109,7 +109,7 @@ export default {
       this.loading = true;
       this.error = null;
       try {
-        const response = await getDashboardSummary();
+        const response = await getDashboardSummary({ userId: this.user._id });
         this.summary = response.data;
         this.$nextTick(() => {
           this.renderCharts();
@@ -121,7 +121,7 @@ export default {
       }
     },
     renderCharts() {
-        // ทำลายกราฟเก่าถ้ามี
+      // ทำลายกราฟเก่าถ้ามี
       if (this.roleChart) {
         this.roleChart.destroy();
         this.roleChart = null;

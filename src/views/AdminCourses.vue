@@ -229,10 +229,10 @@ export default {
       this.saving = true;
       try {
         if (this.isEditing) {
-          await updateSubject(this.currentCourse._id, this.currentCourse);
+          await updateSubject(this.currentCourse._id, { ...this.currentCourse, userId: this.user._id });
           alert('อัปเดตรายวิชาเรียบร้อยแล้ว!');
         } else {
-          await createSubject(this.currentCourse);
+          await createSubject({ ...this.currentCourse, userId: this.user._id });
           alert('เพิ่มรายวิชาเรียบร้อยแล้ว!');
         }
         await this.fetchCourses();
@@ -246,7 +246,7 @@ export default {
     async deleteCourse(id) {
       if (confirm('ยืนยันการลบรายวิชานี้?')) {
         try {
-          await deleteSubject(id);
+          await deleteSubject(id, { userId: this.user._id });
           alert('ลบรายวิชาเรียบร้อยแล้ว!');
           await this.fetchCourses();
         } catch (error) {

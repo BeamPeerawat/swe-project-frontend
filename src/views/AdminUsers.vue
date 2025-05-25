@@ -218,7 +218,7 @@ export default {
       this.loading = true;
       this.error = null;
       try {
-        const response = await getUsers();
+        const response = await getUsers({ userId: this.user._id });
         this.users = response.data;
       } catch (error) {
         this.error = error.response?.data?.message || 'เกิดข้อผิดพลาดในการโหลดผู้ใช้';
@@ -265,7 +265,7 @@ export default {
         this.errors.email = 'รูปแบบอีเมลไม่ถูกต้อง';
       } else {
         try {
-          const response = await checkEmail(email);
+          const response = await checkEmail(email, { userId: this.user._id });
           if (response.data.exists && (!this.isEditing || email !== this.currentUser.email)) {
             this.errors.email = 'อีเมลนี้มีอยู่ในระบบแล้ว';
           } else {
@@ -316,10 +316,10 @@ export default {
       this.saving = true;
       try {
         if (this.isEditing) {
-          await updateUser(this.currentUser._id, this.currentUser);
+          await updateUser(this.currentUser._id, { ...this.currentUser, userId: this.user._id });
           alert('อัปเดตผู้ใช้เรียบร้อยแล้ว!');
         } else {
-          await createUser(this.currentUser);
+          await createUser({ ...this.currentUser, userId: this.user._id });
           alert('เพิ่มผู้ใช้เรียบร้อยแล้ว!');
         }
         await this.fetchUsers();
@@ -337,7 +337,7 @@ export default {
       }
       if (confirm('ยืนยันการลบผู้ใช้นี้?')) {
         try {
-          await deleteUser(id);
+          await deleteUser(id, { userId: this.user._id });
           alert('ลบผู้ใช้เรียบร้อยแล้ว!');
           await this.fetchUsers();
         } catch (error) {
