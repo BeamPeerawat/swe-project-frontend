@@ -279,27 +279,39 @@ export default {
       this.errorMessage = '';
       try {
         console.log('Fetching requests for user:', this.user._id);
+        // ตรวจสอบ cookies ใน browser
+        console.log('Browser Cookies:', document.cookie || 'No cookies found');
+        
         const [generalResponse, openCourseResponse, addSeatResponse] = await Promise.all([
-          axios.get(`/api/generalrequests?userId=${this.user._id}`).catch(err => {
+          axios.get(`/api/generalrequests?userId=${this.user._id}`, {
+            withCredentials: true
+          }).catch(err => {
             console.error('General Requests error:', {
               status: err.response?.status,
-              message: err.response?.data?.message || err.message
+              message: err.response?.data?.message || err.message,
+              headers: err.response?.headers
             });
             this.errorMessage += `General Requests: ${err.response?.data?.message || 'เกิดข้อผิดพลาด'} | `;
             return { data: [] };
           }),
-          axios.get(`/api/opencourserequests/opencourserequests?userId=${this.user._id}`).catch(err => {
+          axios.get(`/api/opencourserequests/opencourserequests?userId=${this.user._id}`, {
+            withCredentials: true
+          }).catch(err => {
             console.error('Open Course Requests error:', {
               status: err.response?.status,
-              message: err.response?.data?.message || err.message
+              message: err.response?.data?.message || err.message,
+              headers: err.response?.headers
             });
             this.errorMessage += `Open Course Requests: ${err.response?.data?.message || 'เกิดข้อผิดพลาด'} | `;
             return { data: [] };
           }),
-          axios.get(`/api/addseatrequests/user/${this.user._id}`).catch(err => {
+          axios.get(`/api/addseatrequests/user/${this.user._id}`, {
+            withCredentials: true
+          }).catch(err => {
             console.error('Add Seat Requests error:', {
               status: err.response?.status,
-              message: err.response?.data?.message || err.message
+              message: err.response?.data?.message || err.message,
+              headers: err.response?.headers
             });
             this.errorMessage += `Add Seat Requests: ${err.response?.data?.message || 'เกิดข้อผิดพลาด'} | `;
             return { data: [] };
@@ -323,7 +335,11 @@ export default {
 
         this.filterRequests();
       } catch (error) {
-        console.error('Unexpected error in fetchRequests:', error);
+        console.error('Unexpected error in fetchRequests:', {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data
+        });
         this.errorMessage = this.errorMessage || 'เกิดข้อผิดพลาดในการโหลดข้อมูลคำร้อง';
       } finally {
         this.isLoading = false;
