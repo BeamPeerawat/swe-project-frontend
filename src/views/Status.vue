@@ -439,49 +439,48 @@ export default {
       this.selectedRequest = null;
     },
     async cancelRequest() {
-      if (!this.selectedRequest) return;
+  if (!this.selectedRequest) return;
 
-      try {
-        this.isLoading = true;
-        const endpoint = this.selectedRequest.requestType === 'open_course'
-          ? `/api/opencourserequests/${this.selectedRequest._id}/cancel`
-          : this.selectedRequest.requestType === 'add_seat'
-          ? `/api/addseatrequests/${this.selectedRequest._id}/cancel`
-          : `/api/generalrequests/${this.selectedRequest._id}/cancel`;
+  try {
+    this.isLoading = true;
+    const endpoint = this.selectedRequest.requestType === 'open_course'
+      ? `/api/opencourserequests/${this.selectedRequest._id}/cancel`
+      : this.selectedRequest.requestType === 'add_seat'
+      ? `/api/addseatrequests/${this.selectedRequest._id}/cancel`
+      : `/api/generalrequests/${this.selectedRequest._id}/cancel`;
 
-        await axios.put(
-          endpoint,
-          { userId: this.user._id },
-          { withCredentials: true }
-        );
+    console.log(`Canceling request: DELETE ${endpoint}`);
+    await axios.delete(endpoint, {
+      withCredentials: true,
+    });
 
-        this.showNotification = true;
-        this.notificationMessage = 'ยกเลิกคำร้องเรียบร้อยแล้ว';
-        this.notificationType = 'success';
-        this.notificationIcon = 'fas fa-check-circle';
-        this.closeConfirmModal();
-        await this.fetchRequests();
-      } catch (error) {
-        const endpoint = this.selectedRequest?.requestType === 'open_course'
-          ? `/api/opencourserequests/${this.selectedRequest?._id}/cancel`
-          : this.selectedRequest?.requestType === 'add_seat'
-          ? `/api/addseatrequests/${this.selectedRequest?._id}/cancel`
-          : `/api/generalrequests/${this.selectedRequest?._id}/cancel`;
-          
-        console.error('Error canceling request:', {
-          status: error.response?.status,
-          message: error.response?.data?.message || error.message,
-          endpoint,
-          requestType: this.selectedRequest?.requestType,
-        });
-        this.showNotification = true;
-        this.notificationMessage = error.response?.data?.message || 'เกิดข้อผิดพลาดในการยกเลิกคำร้อง';
-        this.notificationType = 'error';
-        this.notificationIcon = 'fas fa-exclamation-circle';
-      } finally {
-        this.isLoading = false;
-      }
-    },
+    this.showNotification = true;
+    this.notificationMessage = 'ยกเลิกคำร้องเรียบร้อยแล้ว';
+    this.notificationType = 'success';
+    this.notificationIcon = 'fas fa-check-circle';
+    this.closeConfirmModal();
+    await this.fetchRequests();
+  } catch (error) {
+    const endpoint = this.selectedRequest?.requestType === 'open_course'
+      ? `/api/opencourserequests/${this.selectedRequest?._id}/cancel`
+      : this.selectedRequest?.requestType === 'add_seat'
+      ? `/api/addseatrequests/${this.selectedRequest?._id}/cancel`
+      : `/api/generalrequests/${this.selectedRequest?._id}/cancel`;
+      
+    console.error('Error canceling request:', {
+      status: error.response?.status,
+      message: error.response?.data?.message || error.message,
+      endpoint,
+      requestType: this.selectedRequest?.requestType,
+    });
+    this.showNotification = true;
+    this.notificationMessage = error.response?.data?.message || 'เกิดข้อผิดพลาดในการยกเลิกคำร้อง';
+    this.notificationType = 'error';
+    this.notificationIcon = 'fas fa-exclamation-circle';
+  } finally {
+    this.isLoading = false;
+  }
+},
     async downloadPDF(requestId, requestType) {
       const endpoint = requestType === 'open_course'
         ? `/api/opencourserequests/${requestId}/pdf?userId=${this.user._id}`
