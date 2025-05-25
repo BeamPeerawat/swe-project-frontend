@@ -78,7 +78,10 @@
                     ดูรายละเอียด
                   </button>
                   <button
-                    v-if="['pending_advisor', 'advisor_approved'].includes(request.status)"
+                    v-if="
+                      (['pending_advisor', 'advisor_approved'].includes(request.status) && request.requestType !== 'add_seat') ||
+                      (request.requestType === 'add_seat' && request.status === 'submitted')
+                    "
                     class="cancel-btn"
                     @click="openConfirmModal(request)"
                   >
