@@ -53,8 +53,9 @@ export default {
   },
   methods: {
     loginWithGoogle() {
-      // Redirect ไปยัง Google OAuth endpoint
-      window.location.href = 'http://localhost:3000/api/auth/google';
+      const url = 'https://swe-project-backend-g841.onrender.com/api/auth/google';
+      console.log('Redirecting to:', url);
+      window.location.href = url;
     },
   },
 };

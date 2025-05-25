@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // สร้าง instance ของ axios โดยกำหนด baseURL
 const api = axios.create({
-  baseURL: 'http://localhost:3000/api', // เปลี่ยนเป็น URL ของ backend ถ้า deploy
+  baseURL: 'https://swe-project-backend-g841.onrender.com/api', // เปลี่ยนเป็น URL ของ backend ถ้า deploy
   withCredentials: true, // สำหรับส่ง cookies ถ้าใช้ session-based auth
 });
 
