@@ -139,7 +139,9 @@
     methods: {
       async fetchRequest() {
         try {
-          const response = await this.$axios.get(`/api/generalrequests/${this.$route.params.id}`);
+          const response = await this.$axios.get(`/api/generalrequests/${this.$route.params.id}`, {
+            params: { userId: this.user._id }
+          });
           this.request = response.data;
         } catch (error) {
           this.showNotification = true;
@@ -154,7 +156,8 @@
       async approveRequest() {
         try {
           await this.$axios.post(`/api/generalrequests/${this.$route.params.id}/approve`, {
-            comment: this.comment,
+            userId: this.user._id,
+            comment: this.comment
           });
           this.showNotification = true;
           this.notificationMessage = 'อนุมัติคำร้องเรียบร้อยแล้ว';
@@ -174,7 +177,8 @@
       async rejectRequest() {
         try {
           await this.$axios.post(`/api/generalrequests/${this.$route.params.id}/reject`, {
-            comment: this.comment,
+            userId: this.user._id,
+            comment: this.comment
           });
           this.showNotification = true;
           this.notificationMessage = 'ปฏิเสธคำร้องเรียบร้อยแล้ว';
