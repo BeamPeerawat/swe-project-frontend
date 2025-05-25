@@ -5,7 +5,7 @@ import axios from 'axios';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import './assets/tailwind.css';
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const baseURL = import.meta.env?.VITE_API_BASE_URL || 'https://swe-project-backend-g841.onrender.com';
 console.log('API Base URL:', baseURL);
 
 axios.defaults.baseURL = baseURL;
