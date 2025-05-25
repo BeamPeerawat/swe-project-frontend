@@ -159,7 +159,9 @@ export default {
     async fetchRequest() {
       this.isLoading = true;
       try {
-        const response = await axios.get(`/api/addseatrequests/${this.$route.params.id}`);
+        const response = await axios.get(`/api/addseatrequests/${this.$route.params.id}`, {
+          params: { userId: this.user._id }
+        });
         this.request = response.data;
       } catch (error) {
         console.error('Error fetching request:', error);
@@ -194,6 +196,7 @@ export default {
     async approveRequest() {
       try {
         await axios.post(`/api/addseatrequests/${this.request._id}/approve`, {
+          userId: this.user._id,
           comment: this.instructorComment
         });
         this.showNotification = true;
@@ -215,6 +218,7 @@ export default {
     async rejectRequest() {
       try {
         await axios.post(`/api/addseatrequests/${this.request._id}/reject`, {
+          userId: this.user._id,
           comment: this.instructorComment
         });
         this.showNotification = true;

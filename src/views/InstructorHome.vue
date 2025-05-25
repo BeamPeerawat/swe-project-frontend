@@ -91,7 +91,9 @@ export default {
     async fetchRequests() {
       this.isLoading = true;
       try {
-        const response = await axios.get('/api/addseatrequests/addseatrequests');
+        const response = await axios.get('/api/addseatrequests/addseatrequests', {
+          params: { userId: this.user._id }
+        });
         this.requests = response.data;
       } catch (error) {
         console.error('Error fetching requests:', error);
