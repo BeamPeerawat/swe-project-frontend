@@ -143,7 +143,9 @@ export default {
   methods: {
     async fetchRequest() {
       try {
-        const response = await this.$axios.get(`/api/generalrequests/${this.$route.params.id}`);
+        const response = await this.$axios.get(`/api/generalrequests/${this.$route.params.id}`, {
+          params: { userId: this.user._id }
+        });
         this.request = response.data;
       } catch (error) {
         this.showNotification = true;
@@ -158,6 +160,7 @@ export default {
     async approveRequest() {
       try {
         await this.$axios.post(`/api/generalrequests/${this.$route.params.id}/head/approve`, {
+          userId: this.user._id,
           comment: this.comment,
         });
         this.showNotification = true;
@@ -178,6 +181,7 @@ export default {
     async rejectRequest() {
       try {
         await this.$axios.post(`/api/generalrequests/${this.$route.params.id}/head/reject`, {
+          userId: this.user._id,
           comment: this.comment,
         });
         this.showNotification = true;

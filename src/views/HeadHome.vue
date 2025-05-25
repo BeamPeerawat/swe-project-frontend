@@ -89,12 +89,8 @@ export default {
     async fetchRequests() {
       try {
         const [generalResponse, openCourseResponse] = await Promise.all([
-          this.$axios.get('/api/generalrequests/advisor/pending', {
-            params: { userId: this.user._id }
-          }),
-          this.$axios.get('/api/opencourserequests/advisor/pending', {
-            params: { userId: this.user._id }
-          })
+          this.$axios.get('/api/generalrequests/head/pending', { params: { userId: this.user._id } }),
+          this.$axios.get('/api/opencourserequests/head/pending', { params: { userId: this.user._id } })
         ]);
         this.requests = [
           ...generalResponse.data.map(req => ({ ...req, requestType: 'general' })),
