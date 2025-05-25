@@ -439,13 +439,32 @@ export default {
       this.selectedRequest = null;
     },
     async cancelRequest() {
+      // Define endpoint and method at the function scope
+      const requestConfig = {
+        endpoint: '',
+        method: 'post'
+      };
+      
       try {
-        const endpoint = this.selectedRequest.requestType === 'open_course'
-          ? `/api/opencourserequests/${this.selectedRequest._id}/reject`
-          : this.selectedRequest.requestType === 'add_seat'
-          ? `/api/addseatrequests/${this.selectedRequest._id}/reject`
-          : `/api/generalrequests/${this.selectedRequest._id}/reject`;
-        await axios.post(endpoint, { comment: 'ยกเลิกโดยนักศึกษา' });
+        if (this.selectedRequest.requestType === 'general') {
+          requestConfig.endpoint = `/api/generalrequests/${this.selectedRequest._id}/cancel`;
+          requestConfig.method = 'delete'; // ใช้ DELETE สำหรับ general
+        } else if (this.selectedRequest.requestType === 'open_course') {
+          requestConfig.endpoint = `/api/opencourserequests/${this.selectedRequest._id}/cancel`;
+          requestConfig.method = 'delete';
+        } else if (this.selectedRequest.requestType === 'add_seat') {
+          requestConfig.endpoint = `/api/addseatrequests/${this.selectedRequest._id}/cancel`;
+          requestConfig.method = 'delete';
+        }
+
+        console.log(`Canceling request: ${requestConfig.method.toUpperCase()} ${requestConfig.endpoint}`);
+        await axios({
+          method: requestConfig.method,
+          url: requestConfig.endpoint,
+          data: requestConfig.method === 'post' ? { comment: 'ยกเลิกโดยนักศึกษา' } : undefined,
+          withCredentials: true,
+        });
+
         this.showNotification = true;
         this.notificationMessage = 'ยกเลิกคำร้องเรียบร้อยแล้ว';
         this.notificationType = 'success';
@@ -453,7 +472,13 @@ export default {
         this.closeConfirmModal();
         await this.fetchRequests();
       } catch (error) {
-        console.error('Error canceling request:', error.response?.status, error.response?.data);
+        console.error('Error canceling request:', {
+          status: error.response?.status,
+          message: error.response?.data?.message || error.message,
+          endpoint: requestConfig.endpoint,
+          method: requestConfig.method,
+          requestType: this.selectedRequest?.requestType || 'unknown',
+        });
         this.showNotification = true;
         this.notificationMessage = error.response?.data?.message || 'เกิดข้อผิดพลาดในการยกเลิกคำร้อง';
         this.notificationType = 'error';
