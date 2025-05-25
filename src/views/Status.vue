@@ -254,8 +254,11 @@ export default {
     const userData = localStorage.getItem('user');
     if (userData) {
       this.user = JSON.parse(userData);
+      console.log('User Data:', this.user);
+      console.log('User Role:', this.user.role);
       this.fetchRequests();
     } else {
+      console.log('No user data in localStorage');
       this.$router.push('/login');
     }
   },
