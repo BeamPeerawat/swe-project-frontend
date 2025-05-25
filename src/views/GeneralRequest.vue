@@ -216,7 +216,9 @@ export default {
   },
   created() {
     this.loadUserData();
-    this.fetchDrafts();
+    if (this.user) {
+      this.fetchDrafts();
+    }
   },
   methods: {
     loadUserData() {
@@ -246,7 +248,9 @@ export default {
     },
     async fetchDrafts() {
       try {
-        const response = await this.$axios.get('/api/generalrequests/drafts');
+        const response = await this.$axios.get(`/api/generalrequests/drafts?userId=${this.user._id}`, {
+          withCredentials: true,
+        });
         this.drafts = response.data;
         this.draftCount = this.drafts.length;
       } catch (error) {
@@ -255,7 +259,9 @@ export default {
     },
     async loadDraft(draftId) {
       try {
-        const response = await this.$axios.get(`/api/generalrequests/${draftId}`);
+        const response = await this.$axios.get(`/api/generalrequests/${draftId}?userId=${this.user._id}`, {
+          withCredentials: true,
+        });
         this.form = {
           date: response.data.date,
           month: response.data.month,
@@ -279,7 +285,9 @@ export default {
     async deleteDraft(draftId) {
       if (confirm('ยืนยันการลบแบบร่างนี้?')) {
         try {
-          await this.$axios.delete(`/api/generalrequests/${draftId}`);
+          await this.$axios.delete(`/api/generalrequests/${draftId}?userId=${this.user._id}`, {
+            withCredentials: true,
+          });
           this.drafts = this.drafts.filter(d => d._id !== draftId);
           this.draftCount = this.drafts.length;
           this.showPopupMessage('ลบแบบร่างสำเร็จ!');
@@ -320,6 +328,9 @@ export default {
         await this.$axios.post('/api/generalrequests', {
           ...this.form,
           status: 'pending_advisor',
+          userId: this.user._id, // ส่ง userId ใน body
+        }, {
+          withCredentials: true,
         });
         this.showPopupMessage('คำร้องถูกส่งและบันทึกเรียบร้อยแล้ว!');
         this.resetForm();
@@ -341,6 +352,9 @@ export default {
         const response = await this.$axios.post('/api/generalrequests', {
           ...this.form,
           status: 'draft',
+          userId: this.user._id, // ส่ง userId ใน body
+        }, {
+          withCredentials: true,
         });
         this.drafts.push(response.data);
         this.draftCount = this.drafts.length;
@@ -354,15 +368,15 @@ export default {
         date: '',
         month: '',
         year: '',
-        studentId: this.user.student_no || '',
-        fullName: this.user.name || '',
-        faculty: this.user.faculty || '',
-        fieldOfStudy: this.user.branch || '',
+        studentId: this.user?.student_no || '',
+        fullName: this.user?.name || '',
+        faculty: this.user?.faculty || '',
+        fieldOfStudy: this.user?.branch || '',
         petitionType: '',
         details: '',
-        contactNumber: this.user.contactNumber || '',
-        email: this.user.email || '',
-        signature: this.user.name || '',
+        contactNumber: this.user?.contactNumber || '',
+        email: this.user?.email || '',
+        signature: this.user?.name || '',
       };
       this.contactNumberError = '';
       this.emailError = '';
@@ -374,6 +388,10 @@ export default {
         day: 'numeric',
       });
     },
+    showDrafts() {
+      this.fetchDrafts();
+      this.showDraftsModal = true;
+    },
     showPopupMessage(message) {
       this.popupMessage = message;
       this.showPopup = true;
@@ -383,15 +401,7 @@ export default {
       this.popupMessage = '';
     },
     handleError(error, defaultMessage) {
-      if (error.response?.status === 401) {
-        this.showPopupMessage('กรุณาล็อกอินใหม่');
-        setTimeout(() => {
-          localStorage.removeItem('user');
-          this.$router.push('/login');
-        }, 2000);
-      } else {
-        this.showPopupMessage(`${defaultMessage}: ${error.response?.data?.message || error.message}`);
-      }
+      this.showPopupMessage(`${defaultMessage}: ${error.response?.data?.message || error.message}`);
     },
   },
 };
