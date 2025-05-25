@@ -439,25 +439,21 @@ export default {
       this.selectedRequest = null;
     },
     async cancelRequest() {
-      try {
-        let endpoint;
-        const method = 'delete'; // ใช้ DELETE สำหรับทุกประเภท
-        if (this.selectedRequest.requestType === 'general') {
-          endpoint = `/api/generalrequests/${this.selectedRequest._id}/cancel`;
-        } else if (this.selectedRequest.requestType === 'open_course') {
-          endpoint = `/api/opencourserequests/${this.selectedRequest._id}/cancel`;
-        } else if (this.selectedRequest.requestType === 'add_seat') {
-          endpoint = `/api/addseatrequests/${this.selectedRequest._id}/cancel`;
-        } else {
-          throw new Error('Unknown request type');
-        }
+      if (!this.selectedRequest) return;
 
-        console.log(`Canceling request: ${method.toUpperCase()} ${endpoint}`);
-        await axios({
-          method,
-          url: endpoint,
-          withCredentials: true,
-        });
+      try {
+        this.isLoading = true;
+        const endpoint = this.selectedRequest.requestType === 'open_course'
+          ? `/api/opencourserequests/${this.selectedRequest._id}/cancel`
+          : this.selectedRequest.requestType === 'add_seat'
+          ? `/api/addseatrequests/${this.selectedRequest._id}/cancel`
+          : `/api/generalrequests/${this.selectedRequest._id}/cancel`;
+
+        const response = await axios.put(
+          endpoint,
+          { userId: this.user._id },
+          { withCredentials: true }
+        );
 
         this.showNotification = true;
         this.notificationMessage = 'ยกเลิกคำร้องเรียบร้อยแล้ว';
@@ -466,16 +462,24 @@ export default {
         this.closeConfirmModal();
         await this.fetchRequests();
       } catch (error) {
+        const endpoint = this.selectedRequest?.requestType === 'open_course'
+          ? `/api/opencourserequests/${this.selectedRequest?._id}/cancel`
+          : this.selectedRequest?.requestType === 'add_seat'
+          ? `/api/addseatrequests/${this.selectedRequest?._id}/cancel`
+          : `/api/generalrequests/${this.selectedRequest?._id}/cancel`;
+          
         console.error('Error canceling request:', {
           status: error.response?.status,
           message: error.response?.data?.message || error.message,
           endpoint,
-          requestType: this.selectedRequest.requestType,
+          requestType: this.selectedRequest?.requestType,
         });
         this.showNotification = true;
         this.notificationMessage = error.response?.data?.message || 'เกิดข้อผิดพลาดในการยกเลิกคำร้อง';
         this.notificationType = 'error';
         this.notificationIcon = 'fas fa-exclamation-circle';
+      } finally {
+        this.isLoading = false;
       }
     },
     async downloadPDF(requestId, requestType) {
