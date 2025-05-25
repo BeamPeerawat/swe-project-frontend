@@ -444,10 +444,10 @@ export default {
   try {
     this.isLoading = true;
     const endpoint = this.selectedRequest.requestType === 'open_course'
-      ? `/api/opencourserequests/${this.selectedRequest._id}/cancel`
+      ? `/api/opencourserequests/${this.selectedRequest._id}/cancel?userId=${this.user._id}`
       : this.selectedRequest.requestType === 'add_seat'
-      ? `/api/addseatrequests/${this.selectedRequest._id}/cancel`
-      : `/api/generalrequests/${this.selectedRequest._id}/cancel`;
+      ? `/api/addseatrequests/${this.selectedRequest._id}/cancel?userId=${this.user._id}`
+      : `/api/generalrequests/${this.selectedRequest._id}/cancel?userId=${this.user._id}`;
 
     console.log(`Canceling request: DELETE ${endpoint}`);
     await axios.delete(endpoint, {
@@ -462,10 +462,10 @@ export default {
     await this.fetchRequests();
   } catch (error) {
     const endpoint = this.selectedRequest?.requestType === 'open_course'
-      ? `/api/opencourserequests/${this.selectedRequest?._id}/cancel`
+      ? `/api/opencourserequests/${this.selectedRequest?._id}/cancel?userId=${this.user._id}`
       : this.selectedRequest?.requestType === 'add_seat'
-      ? `/api/addseatrequests/${this.selectedRequest?._id}/cancel`
-      : `/api/generalrequests/${this.selectedRequest?._id}/cancel`;
+      ? `/api/addseatrequests/${this.selectedRequest?._id}/cancel?userId=${this.user._id}`
+      : `/api/generalrequests/${this.selectedRequest?._id}/cancel?userId=${this.user._id}`;
       
     console.error('Error canceling request:', {
       status: error.response?.status,
