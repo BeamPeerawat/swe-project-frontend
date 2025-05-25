@@ -180,8 +180,6 @@ export default {
   computed: {
     filteredUsers() {
       let filtered = this.users;
-
-      // ค้นหาด้วย searchQuery
       if (this.searchQuery) {
         const query = this.searchQuery.toLowerCase();
         filtered = filtered.filter(
@@ -190,12 +188,9 @@ export default {
             (user.name && user.name.toLowerCase().includes(query))
         );
       }
-
-      // กรองด้วย role
       if (this.roleFilter) {
         filtered = filtered.filter((user) => user.role === this.roleFilter);
       }
-
       return filtered;
     },
     hasErrors() {
@@ -203,14 +198,11 @@ export default {
     }
   },
   async created() {
-    // ดึงข้อมูลผู้ใช้ที่ล็อกอิน
     this.user = await getCurrentUser();
-    if (!this.user) {
+    if (!this.user || this.user.role !== 'admin') {
       this.$router.push('/login');
       return;
     }
-
-    // ดึงรายชื่อผู้ใช้
     await this.fetchUsers();
   },
   methods: {
@@ -302,17 +294,14 @@ export default {
       }
     },
     async saveUser() {
-      // ตรวจสอบทุกฟิลด์
       await this.validateEmail();
       this.validateName();
       this.validateRole();
       this.validateStudentNo();
-
       if (this.hasErrors) {
         alert('กรุณาแก้ไขข้อมูลที่ไม่ถูกต้อง');
         return;
       }
-
       this.saving = true;
       try {
         if (this.isEditing) {

@@ -162,8 +162,6 @@ export default {
   computed: {
     filteredCourses() {
       let filtered = this.courses;
-
-      // ค้นหาด้วย searchQuery
       if (this.searchQuery) {
         const query = this.searchQuery.toLowerCase();
         filtered = filtered.filter(
@@ -173,26 +171,20 @@ export default {
             course.subjectNameEN.toLowerCase().includes(query)
         );
       }
-
-      // กรองด้วย credits
       if (this.creditsFilter) {
         filtered = filtered.filter(
           (course) => course.credits.toString() === this.creditsFilter
         );
       }
-
       return filtered;
     }
   },
   async created() {
-    // ดึงข้อมูลผู้ใช้จาก backend
     this.user = await getCurrentUser();
-    if (!this.user) {
+    if (!this.user || this.user.role !== 'admin') {
       this.$router.push('/login');
       return;
     }
-
-    // ดึงรายวิชาจาก backend
     await this.fetchCourses();
   },
   methods: {

@@ -94,9 +94,9 @@ export default {
     };
   },
   async created() {
-    // ดึงข้อมูลผู้ใช้ที่ล็อกอิน
+    // ดึงข้อมูลผู้ใช้
     this.user = await getCurrentUser();
-    if (!this.user) {
+    if (!this.user || this.user.role !== 'admin') {
       this.$router.push('/login');
       return;
     }
@@ -121,7 +121,6 @@ export default {
       }
     },
     renderCharts() {
-      // ทำลายกราฟเก่าถ้ามี
       if (this.roleChart) {
         this.roleChart.destroy();
         this.roleChart = null;
@@ -135,7 +134,6 @@ export default {
         this.facultyChart = null;
       }
 
-      // ตรวจสอบว่า canvas มีอยู่จริงก่อนที่จะสร้างกราฟ
       const roleCanvas = document.getElementById('roleChart');
       if (!roleCanvas) return;
       
@@ -163,9 +161,7 @@ export default {
                 }
               }
             },
-            title: {
-              display: false
-            },
+            title: { display: false },
             tooltip: {
               callbacks: {
                 label: (context) => {
@@ -179,7 +175,6 @@ export default {
         }
       });
 
-      // Bar chart สำหรับจำนวนรายวิชาตามหน่วยกิต
       const creditsCanvas = document.getElementById('creditsChart');
       if (!creditsCanvas) return;
       const creditsCtx = creditsCanvas.getContext('2d');
@@ -209,33 +204,21 @@ export default {
               title: {
                 display: true,
                 text: 'จำนวนรายวิชา',
-                font: {
-                  family: "'Kanit', sans-serif",
-                  size: 14
-                }
+                font: { family: "'Kanit', sans-serif", size: 14 }
               },
-              ticks: {
-                stepSize: 1
-              }
+              ticks: { stepSize: 1 }
             },
             x: {
               title: {
                 display: true,
                 text: 'หน่วยกิต',
-                font: {
-                  family: "'Kanit', sans-serif",
-                  size: 14
-                }
+                font: { family: "'Kanit', sans-serif", size: 14 }
               }
             }
           },
           plugins: {
-            legend: {
-              display: false
-            },
-            title: {
-              display: false
-            },
+            legend: { display: false },
+            title: { display: false },
             tooltip: {
               callbacks: {
                 label: (context) => {
@@ -248,7 +231,6 @@ export default {
         }
       });
 
-      // Bar chart สำหรับจำนวนผู้ใช้ตามคณะ
       const facultyCanvas = document.getElementById('facultyChart');
       if (!facultyCanvas) return;
       const facultyCtx = facultyCanvas.getContext('2d');
@@ -279,33 +261,21 @@ export default {
               title: {
                 display: true,
                 text: 'จำนวนผู้ใช้',
-                font: {
-                  family: "'Kanit', sans-serif",
-                  size: 14
-                }
+                font: { family: "'Kanit', sans-serif", size: 14 }
               },
-              ticks: {
-                stepSize: 1
-              }
+              ticks: { stepSize: 1 }
             },
             x: {
               title: {
                 display: true,
                 text: 'คณะ',
-                font: {
-                  family: "'Kanit', sans-serif",
-                  size: 14
-                }
+                font: { family: "'Kanit', sans-serif", size: 14 }
               }
             }
           },
           plugins: {
-            legend: {
-              display: false
-            },
-            title: {
-              display: false
-            },
+            legend: { display: false },
+            title: { display: false },
             tooltip: {
               callbacks: {
                 label: (context) => {
@@ -328,7 +298,6 @@ export default {
     }
   },
   beforeUnmount() {
-    // Destroy charts when component is unmounted
     if (this.roleChart) {
       this.roleChart.destroy();
       this.roleChart = null;
