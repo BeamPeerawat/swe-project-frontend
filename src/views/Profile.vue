@@ -427,7 +427,6 @@ export default {
           student_no: this.editUser.student_no,
           faculty: this.editUser.faculty,
           branch: this.editUser.branch,
-          group: this.editUser.group,
           contactNumber: this.editUser.contactNumber || '',
         };
         const response = await this.$axios.put(`/api/user/${this.user.email}`, updateData, {
