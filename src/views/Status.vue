@@ -279,7 +279,6 @@ export default {
       this.errorMessage = '';
       try {
         console.log('Fetching requests for user:', this.user._id);
-        // ตรวจสอบ cookies ใน browser
         console.log('Browser Cookies:', document.cookie || 'No cookies found');
         
         const [generalResponse, openCourseResponse, addSeatResponse] = await Promise.all([
@@ -317,6 +316,10 @@ export default {
             return { data: [] };
           })
         ]);
+
+        console.log('General Response Headers:', generalResponse.headers);
+        console.log('Add Seat Response Headers:', addSeatResponse.headers);
+        console.log('Open Course Response Headers:', openCourseResponse.headers);
 
         this.requests = [
           ...generalResponse.data.map(req => ({ ...req, requestType: 'general' })),
