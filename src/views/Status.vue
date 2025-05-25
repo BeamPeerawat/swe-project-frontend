@@ -449,7 +449,7 @@ export default {
           ? `/api/addseatrequests/${this.selectedRequest._id}/cancel`
           : `/api/generalrequests/${this.selectedRequest._id}/cancel`;
 
-        const response = await axios.put(
+        await axios.put(
           endpoint,
           { userId: this.user._id },
           { withCredentials: true }
