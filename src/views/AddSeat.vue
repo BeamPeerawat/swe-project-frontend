@@ -218,8 +218,6 @@
 </template>
 
 <script>
-import axios from 'axios';
-
 export default {
   name: 'AddSeatPage',
   data() {
@@ -260,42 +258,44 @@ export default {
     };
   },
   created() {
-    // ดึงข้อมูลผู้ใช้จาก localStorage
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      this.user = JSON.parse(userData);
-      // ตรวจสอบว่าเป็นอีเมล @rmuti.ac.th
-      if (!this.user.email.endsWith('@rmuti.ac.th')) {
-        this.showPopupMessage('กรุณาใช้อีเมลที่ลงท้ายด้วย @rmuti.ac.th');
-        this.$router.push('/login');
-        return;
-      }
-      // กรอกข้อมูลฟอร์มอัตโนมัติ
-      this.form.studentName = this.user.name || '';
-      this.form.email = this.user.email || '';
-      this.form.studentId = this.user.student_no || '';
-      
-      // เพิ่มการดึงข้อมูลคณะ สาขาวิชา และเบอร์โทรศัพท์จากโปรไฟล์
-      this.form.faculty = this.user.faculty || '';
-      this.form.fieldOfStudy = this.user.branch || '';
-      this.form.contactNumber = this.user.contactNumber || '';
-      
-      this.form.signature = this.user.name || '';
-      this.form.classLevel = this.user.group || '';
-    } else {
-      // ถ้าไม่ล็อกอิน redirect ไป login
-      this.showPopupMessage('กรุณาล็อกอินก่อนยื่นคำร้อง');
-      this.$router.push('/login');
-    }
+    this.loadUserData();
   },
   async mounted() {
     await this.fetchSubjects();
-    await this.fetchDrafts();
+    if (this.user) {
+      await this.fetchDrafts();
+    }
   },
   methods: {
+    loadUserData() {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        this.user = JSON.parse(userData);
+        if (!this.user.email.endsWith('@rmuti.ac.th')) {
+          this.showPopupMessage('กรุณาใช้อีเมลที่ลงท้ายด้วย @rmuti.ac.th');
+          setTimeout(() => {
+            this.$router.push('/login');
+          }, 2000);
+          return;
+        }
+        this.form.studentName = this.user.name || '';
+        this.form.email = this.user.email || '';
+        this.form.studentId = this.user.student_no || '';
+        this.form.faculty = this.user.faculty || '';
+        this.form.fieldOfStudy = this.user.branch || '';
+        this.form.contactNumber = this.user.contactNumber || '';
+        this.form.signature = this.user.name || '';
+        this.form.classLevel = this.user.group || '';
+      } else {
+        this.showPopupMessage('กรุณาล็อกอินก่อนยื่นคำร้อง');
+        setTimeout(() => {
+          this.$router.push('/login');
+        }, 2000);
+      }
+    },
     async fetchSubjects() {
       try {
-        const response = await axios.get('/api/subjects');
+        const response = await this.$axios.get('/api/subjects', { withCredentials: true });
         this.subjects = response.data;
         if (response.data.length === 0) {
           this.showPopupMessage('ไม่พบข้อมูลรายวิชาในระบบ กรุณาติดต่อผู้ดูแล');
@@ -313,12 +313,14 @@ export default {
     },
     async fetchDrafts() {
       try {
-        const response = await axios.get(`/api/addseatrequests/drafts/${this.user._id}`);
+        const response = await this.$axios.get(`/api/addseatrequests/drafts?userId=${this.user._id}`, {
+          withCredentials: true,
+        });
         this.drafts = response.data.drafts;
         this.draftCount = response.data.count;
       } catch (error) {
         console.error('Error fetching drafts:', error.response?.data || error.message);
-        this.showPopupMessage('เกิดข้อผิดพลาดในการโหลดแบบร่าง');
+        this.showPopupMessage('เกิดข้อผิดพลาดในการโหลดแบบร่าง: ' + (error.response?.data?.message || error.message));
       }
     },
     async showDrafts() {
@@ -327,24 +329,28 @@ export default {
     },
     async loadDraft(draftId) {
       try {
-        const response = await axios.get(`/api/addseatrequests/${draftId}`);
+        const response = await this.$axios.get(`/api/addseatrequests/${draftId}?userId=${this.user._id}`, {
+          withCredentials: true,
+        });
         this.form = { ...response.data, levelOfStudy: response.data.levelOfStudy || '' };
         this.showDraftsModal = false;
         this.showPopupMessage('โหลดแบบร่างสำเร็จ!');
       } catch (error) {
         console.error('Error loading draft:', error.response?.data || error.message);
-        this.showPopupMessage('เกิดข้อผิดพลาดในการโหลดแบบร่าง');
+        this.showPopupMessage('เกิดข้อผิดพลาดในการโหลดแบบร่าง: ' + (error.response?.data?.message || error.message));
       }
     },
     async deleteDraft(draftId) {
       if (confirm('ยืนยันการลบแบบร่างนี้?')) {
         try {
-          await axios.delete(`/api/addseatrequests/${draftId}`);
+          await this.$axios.delete(`/api/addseatrequests/${draftId}?userId=${this.user._id}`, {
+            withCredentials: true,
+          });
           await this.fetchDrafts();
           this.showPopupMessage('ลบแบบร่างสำเร็จ!');
         } catch (error) {
           console.error('Error deleting draft:', error.response?.data || error.message);
-          this.showPopupMessage('เกิดข้อผิดพลาดในการลบแบบร่าง');
+          this.showPopupMessage('เกิดข้อผิดพลาดในการลบแบบร่าง: ' + (error.response?.data?.message || error.message));
         }
       }
     },
@@ -359,17 +365,13 @@ export default {
       }
     },
     onlyNumbers(event) {
-      // อนุญาตเฉพาะตัวเลข (0-9) และ key ที่จำเป็น (backspace, delete, arrow keys)
       const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
       if (!allowedKeys.includes(event.key) && !/^\d$/.test(event.key)) {
         event.preventDefault();
       }
     },
     validateContactNumber() {
-      // ลบอักขระที่ไม่ใช่ตัวเลขออก
       this.form.contactNumber = this.form.contactNumber.replace(/\D/g, '');
-      
-      // ตรวจสอบความยาว
       if (this.form.contactNumber.length !== 10) {
         this.contactNumberError = 'เบอร์โทรศัพท์ต้องมี 10 หลัก';
       } else {
@@ -387,21 +389,21 @@ export default {
     async submitForm() {
       this.validateContactNumber();
       this.validateEmail();
-
       if (this.contactNumberError || this.emailError) {
         this.showPopupMessage('กรุณาแก้ไขข้อมูลที่ไม่ถูกต้องก่อนยื่นคำร้อง');
         return;
       }
-
       if (!this.form.courseCode) {
         this.showPopupMessage('กรุณาเลือกรายวิชาก่อนยื่นคำร้อง');
         return;
       }
-
       try {
-        const response = await axios.post('/api/addseatrequests', {
+        const response = await this.$axios.post('/api/addseatrequests', {
           ...this.form,
           userId: this.user?._id,
+          status: 'submitted',
+        }, {
+          withCredentials: true,
         });
         console.log('Form submitted:', response.data);
         this.showPopupMessage('คำร้องถูกส่งและบันทึกเรียบร้อยแล้ว!');
@@ -414,10 +416,19 @@ export default {
       }
     },
     async saveDraft() {
+      this.validateContactNumber();
+      this.validateEmail();
+      if (this.contactNumberError || this.emailError) {
+        this.showPopupMessage('กรุณาแก้ไขข้อมูลที่ไม่ถูกต้องก่อนบันทึกแบบร่าง');
+        return;
+      }
       try {
-        const response = await axios.post('/api/addseatrequests/draft', {
+        const response = await this.$axios.post('/api/addseatrequests/draft', {
           ...this.form,
           userId: this.user?._id,
+          status: 'draft',
+        }, {
+          withCredentials: true,
         });
         console.log('Draft saved:', response.data);
         await this.fetchDrafts();
